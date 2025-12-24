@@ -1,97 +1,74 @@
+// Adicione 'where' nos imports do Firestore
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Configuração oficial
-const firebaseConfig = {
-  apiKey: "AIzaSyBAlXgCQ10YLWYfFi47cXelUKMYAF3DW-Q",
-  authDomain: "conectabairros-dea35.firebaseapp.com",
-  projectId: "conectabairros-dea35",
-  storageBucket: "conectabairros-dea35.firebasestorage.app",
-  messagingSenderId: "215834992578",
-  appId: "1:215834992578:web:625ef084714b032fcfc05b",
-  measurementId: "G-6JKL4S2LXD"
-};
+// ... (sua firebaseConfig continua igual)
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- FUNÇÃO: CARREGAR DADOS ---
-async function carregarDados() {
+// --- FUNÇÃO: CARREGAR COM FILTRO ---
+window.carregarDadosFiltrados = async function() {
+    const estadoFiltro = document.getElementById('filtro-estado').value;
     const vitrine = document.getElementById('lista-comerciantes');
-    if (!vitrine) return;
+    vitrine.innerHTML = "Buscando comerciantes locais...";
 
     try {
-        const q = query(collection(db, "comerciantes"));
+        let q;
+        if (estadoFiltro) {
+            // Se houver filtro, busca apenas o estado selecionado
+            q = query(collection(db, "comerciantes"), where("estado", "==", estadoFiltro));
+        } else {
+            // Se não, busca todos
+            q = query(collection(db, "comerciantes"));
+        }
+
         const snapshot = await getDocs(q);
         vitrine.innerHTML = ""; 
 
+        if (snapshot.empty) {
+            vitrine.innerHTML = "<p class='col-span-full text-center text-gray-500'>Nenhum comerciante cadastrado nesta região ainda.</p>";
+            return;
+        }
+
         snapshot.forEach((doc) => {
             const d = doc.data();
-            
-            // Lógica de ícones e cores
-            let icone = 'storefront'; 
-            let corBadge = 'bg-blue-100 text-blue-700';
-
-            const cat = d.categoria ? d.categoria.toLowerCase() : "";
-            if (cat.includes('alimento') || cat.includes('padaria') || cat.includes('pães')) {
-                icone = 'restaurant';
-                corBadge = 'bg-orange-100 text-orange-700';
-            } else if (cat.includes('serviço') || cat.includes('manutenção')) {
-                icone = 'build';
-                corBadge = 'bg-purple-100 text-purple-700';
-            }
-
             vitrine.innerHTML += `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${corBadge}">
-                                ${d.categoria || 'Geral'}
-                            </span>
-                            <span class="material-icons text-gray-300 group-hover:text-blue-500 transition-colors">
-                                ${icone}
-                            </span>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">${d.nome}</h3>
-                        <p class="text-gray-500 text-sm leading-relaxed mb-6 h-12 overflow-hidden">
-                            ${d.descricao || 'Sem descrição.'}
-                        </p>
-                        <a href="https://wa.me/${d.whatsapp}" target="_blank" 
-                           class="flex items-center justify-center gap-2 w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 shadow-lg shadow-green-100 transition-all">
-                           <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" class="w-5 h-5" alt="WhatsApp">
-                           Conversar Agora
-                        </a>
+                <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">${d.cidade} - ${d.estado}</span>
+                        <span class="text-xs text-gray-400 italic">${d.categoria}</span>
                     </div>
+                    <h3 class="text-xl font-bold text-gray-800">${d.nome}</h3>
+                    <p class="text-gray-600 my-4 text-sm whitespace-pre-line">${d.descricao}</p>
+                    <a href="https://wa.me/${d.whatsapp}" target="_blank" class="block text-center bg-green-500 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition">
+                       Ver Produtos / Contato
+                    </a>
                 </div>`;
         });
-    } catch (e) { 
-        console.error("Erro ao carregar:", e); 
-    }
+    } catch (e) { console.error(e); }
 }
 
-// --- FUNÇÃO: CADASTRAR DADOS ---
+// --- FUNÇÃO: CADASTRAR COM LOCALIZAÇÃO ---
 const form = document.getElementById('form-cadastro');
-if (form) {
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const novaLoja = {
-            nome: document.getElementById('reg-nome').value,
-            categoria: document.getElementById('reg-categoria').value,
-            descricao: document.getElementById('reg-descricao').value,
-            whatsapp: document.getElementById('reg-whatsapp').value,
-            criadoEm: new Date()
-        };
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const novaLoja = {
+        estado: document.getElementById('reg-estado').value.toUpperCase(),
+        cidade: document.getElementById('reg-cidade').value,
+        nome: document.getElementById('reg-nome').value,
+        categoria: document.getElementById('reg-categoria').value,
+        descricao: document.getElementById('reg-descricao').value,
+        whatsapp: document.getElementById('reg-whatsapp').value,
+        criadoEm: new Date()
+    };
 
-        try {
-            await addDoc(collection(db, "comerciantes"), novaLoja);
-            alert("Cadastrado com sucesso!");
-            form.reset();
-            carregarDados(); 
-        } catch (e) { 
-            alert("Erro ao salvar! Verifique as regras do Firebase."); 
-        }
-    });
-}
+    try {
+        await addDoc(collection(db, "comerciantes"), novaLoja);
+        alert("Cadastrado com sucesso no Conecta Bairros!");
+        form.reset();
+        carregarDadosFiltrados(); 
+    } catch (e) { alert("Erro ao salvar!"); }
+});
 
-carregarDados();
+// Inicializa a página carregando todos
+carregarDadosFiltrados();
