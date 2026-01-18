@@ -8,13 +8,31 @@ var firebaseConfig = {
     appId: "1:215834992578:web:625ef084714b032fcfc05b"
 };
 
-// 2. Inicialização Segura
+// 2. Inicialização
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 var db = firebase.firestore();
 
-// 3. FUNÇÃO PARA CARREGAR DADOS
+// 2.1 INICIALIZAÇÃO DA AUTENTICAÇÃO (NOVO)
+var auth = firebase.auth();
+var provider = new firebase.auth.GoogleAuthProvider();
+
+// Função para o botão de Login (Chame isso no onclick do seu botão HTML)
+window.fazerLoginGoogle = function() {
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            var user = result.user;
+            alert("Bem-vindo(a), " + user.displayName + "!");
+            console.log("Usuário logado:", user);
+            // Aqui você pode mudar o texto do botão ou esconder a tela de login
+        }).catch((error) => {
+            console.error("Erro no login:", error);
+            alert("Erro ao fazer login. Tente novamente.");
+        });
+};
+
+// 3. FUNÇÃO PARA CARREGAR DADOS (Leitura pública)
 window.carregarDadosFiltrados = function() {
     var vitrine = document.getElementById('lista-comerciantes');
     var estadoFiltro = document.getElementById('filtro-estado').value;
@@ -55,12 +73,21 @@ window.carregarDadosFiltrados = function() {
     });
 };
 
-// 4. FUNÇÃO PARA SALVAR
+// 4. FUNÇÃO PARA SALVAR (Com proteção de Login)
 var form = document.getElementById('form-cadastro');
 if (form) {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // VERIFICAÇÃO: O usuário está logado? (NOVO)
+        var usuarioLogado = auth.currentUser;
+        if (!usuarioLogado) {
+            alert("Você precisa fazer login com o Google para cadastrar uma loja!");
+            // Opcional: chamar a função de login automaticamente
+            // window.fazerLoginGoogle(); 
+            return;
+        }
+
         var novaLoja = {
             estado: document.getElementById('reg-estado').value.toUpperCase(),
             cidade: document.getElementById('reg-cidade').value,
@@ -68,7 +95,8 @@ if (form) {
             categoria: document.getElementById('reg-categoria').value,
             descricao: document.getElementById('reg-descricao').value,
             whatsapp: document.getElementById('reg-whatsapp').value,
-            criadoEm: new Date()
+            criadoEm: new Date(),
+            uid_usuario: usuarioLogado.uid // Salva quem criou (útil para regras futuras)
         };
 
         db.collection("comerciantes").add(novaLoja).then(function() {
@@ -77,7 +105,12 @@ if (form) {
             window.carregarDadosFiltrados();
         }).catch(function(error) {
             console.error("Erro ao salvar:", error);
-            alert("Erro ao salvar!");
+            // Se o erro for de permissão (regras do firebase), avisa o usuário
+            if (error.code === 'permission-denied') {
+                alert("Erro: Permissão negada. Verifique se você está logado.");
+            } else {
+                alert("Erro ao salvar! Tente novamente.");
+            }
         });
     });
 }
