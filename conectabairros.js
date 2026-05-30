@@ -45,7 +45,7 @@ function converterParaBase64(file) {
 var idLojaEmEdicao = null;
 
 // 3. FUNÇÃO PARA CARREGAR DADOS (Com botões de Ação)
-db.collection('comercios').onSnapshot((snapshot) => {
+db.collection('comerciantes').onSnapshot=> {
     const container = document.getElementById('container-comercios');
     if (!container) return; 
     
