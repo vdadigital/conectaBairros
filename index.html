@@ -44,7 +44,14 @@
                 </div>
                 <input type="text" id="reg-nome" placeholder="Nome da Loja" class="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition" required>
                 <input type="text" id="reg-categoria" placeholder="Categoria" class="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition" required>
-                <textarea id="reg-descricao" placeholder="Descrição e Galeria de Produtos" class="w-full p-3 border border-gray-300 rounded-lg h-32 outline-none focus:ring-2 focus:ring-blue-500 transition" required></textarea>
+               <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="imagem-loja">
+                           Foto do Negócio ou Logo (Opcional)
+                     </label>
+                     <input type="file" id="imagem-loja" accept="image/*" 
+                      class="w-full text-gray-700 bg-white border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                  <textarea id="reg-descricao" placeholder="Descrição e Galeria de Produtos" class="w-full p-3 border border-gray-300 rounded-lg h-32 outline-none focus:ring-2 focus:ring-blue-500 transition" required></textarea>
                 <input type="text" id="reg-whatsapp" placeholder="WhatsApp com DDD" class="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition" required>
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition">
                     Publicar no Meu Bairro 🚀
