@@ -33,46 +33,40 @@ window.fazerLoginGoogle = function() {
 };
 
 // 3. FUNÇÃO PARA CARREGAR DADOS (Leitura pública)
-window.carregarDadosFiltrados = function() {
-    var vitrine = document.getElementById('lista-comerciantes');
-    var estadoFiltro = document.getElementById('filtro-estado').value;
-    
-    if (!vitrine) {
-        console.error("Erro: A div 'lista-comerciantes' não foi encontrada no HTML!");
-        return;
-    }
+// Dentro do seu loop de leitura do Firebase (ex: querySnapshot.forEach)
+db.collection('comercios').onSnapshot((snapshot) => {
+    const container = document.getElementById('container-comercios');
+    container.innerHTML = ""; // Limpa antes de renderizar
 
-    vitrine.innerHTML = "<p class='col-span-full text-center'>Buscando no bairro...</p>";
+    snapshot.forEach((doc) => {
+        const negocio = doc.to_dict ? doc.to_dict() : doc.data();
 
-    var query = db.collection("comerciantes");
-    if (estadoFiltro) {
-        query = query.where("estado", "==", estadoFiltro);
-    }
+        // VALIDAÇÃO DA IMAGEM: Se existir negócio.imagem usa ela, senão usa uma padrão da sua pasta img
+        const fotoCard = negocio.imagem ? negocio.imagem : 'img/default-loja.png';
 
-    query.get().then(function(snapshot) {
-        vitrine.innerHTML = "";
-        
-        if (snapshot.empty) {
-            vitrine.innerHTML = "<p class='col-span-full text-center'>Nenhum comércio cadastrado nesta região.</p>";
-            return;
-        }
-
-        snapshot.forEach(function(doc) {
-            var d = doc.data();
-            vitrine.innerHTML += 
-                '<div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500 mb-4">' +
-                    '<span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">' + (d.cidade || "") + ' - ' + (d.estado || "") + '</span>' +
-                    '<h3 class="text-xl font-bold text-gray-800 mt-2">' + (d.nome || "Sem Nome") + '</h3>' +
-                    '<p class="text-gray-600 my-4 text-sm">' + (d.descricao || "") + '</p>' +
-                    '<a href="https://wa.me/' + d.whatsapp + '" target="_blank" class="block text-center bg-green-500 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition">Conversar no WhatsApp</a>' +
-                '</div>';
-        });
-    }).catch(function(error) {
-        console.error("Erro ao carregar dados:", error);
-        vitrine.innerHTML = "<p class='col-span-full text-center text-red-500'>Erro ao carregar os dados.</p>";
+        // Montagem do card em Tailwind
+        container.innerHTML += `
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100">
+                <img src="${fotoCard}" alt="Logo de ${negocio.nome}" class="w-full h-48 object-cover">
+                
+                <div class="p-5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        ${negocio.categoria}
+                    </span>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">${negocio.nome}</h3>
+                    <p class="text-gray-500 text-sm mt-1 mb-4 line-clamp-2">${negocio.descricao}</p>
+                    
+                    <div class="flex justify-between items-center border-t pt-3">
+                        <span class="text-xs font-semibold text-gray-400">📍 Estado: ${negocio.estado}</span>
+                        <a href="https://wa.me/${negocio.whatsapp}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-1.5 px-3 rounded-lg inline-flex items-center gap-1 transition">
+                            💬 WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
     });
-};
-
+});
 // 4. FUNÇÃO PARA SALVAR (Com proteção de Login)
 var form = document.getElementById('form-cadastro');
 if (form) {
