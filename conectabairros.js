@@ -41,89 +41,143 @@ function converterParaBase64(file) {
     });
 }
 
-// 3. FUNÇÃO PARA CARREGAR DADOS (Leitura Pública em Tempo Real)
+// --- VARIÁVEL GLOBAL PARA CONTROLE DE EDIÇÃO ---
+var idLojaEmEdicao = null;
+
+// 3. FUNÇÃO PARA CARREGAR DADOS (Com botões de Ação)
 db.collection('comercios').onSnapshot((snapshot) => {
     const container = document.getElementById('container-comercios');
-    
-    // Trava de segurança: só tenta desenhar se a div existir na página
     if (!container) return; 
     
-    container.innerHTML = ""; // Limpa antes de renderizar
+    container.innerHTML = ""; 
 
     snapshot.forEach((doc) => {
-        const negocio = doc.data(); // CORRIGIDO: Removido o to_dict() do Python
+        const negocio = doc.data(); 
+        const docId = doc.id; // O ID único gerado pelo Firebase!
 
-        // VALIDAÇÃO DA IMAGEM
         const fotoCard = negocio.imagem ? negocio.imagem : 'img/default-loja.png';
 
-        // Montagem do card em Tailwind
         container.innerHTML += `
-            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col">
                 <img src="${fotoCard}" alt="Logo de ${negocio.nome}" class="w-full h-48 object-cover">
                 
-                <div class="p-5">
+                <div class="p-5 flex-grow">
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded">
                         ${negocio.categoria}
                     </span>
                     <h3 class="text-xl font-bold text-gray-800 mt-2">${negocio.nome}</h3>
                     <p class="text-gray-500 text-sm mt-1 mb-4 line-clamp-2">${negocio.descricao}</p>
                     
-                    <div class="flex justify-between items-center border-t pt-3">
-                        <span class="text-xs font-semibold text-gray-400">📍 Estado: ${negocio.estado}</span>
-                        <a href="https://wa.me/${negocio.whatsapp}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-1.5 px-3 rounded-lg inline-flex items-center gap-1 transition">
+                    <div class="flex justify-between items-center border-t pt-3 mb-3">
+                        <span class="text-xs font-semibold text-gray-400">📍 ${negocio.estado}</span>
+                        <a href="https://wa.me/${negocio.whatsapp}" target="_blank" class="text-emerald-500 hover:text-emerald-600 text-sm font-bold flex items-center gap-1 transition">
                             💬 WhatsApp
                         </a>
                     </div>
+                </div>
+
+                <div class="bg-gray-50 p-3 flex justify-between border-t border-gray-100">
+                    <button onclick="editarComercio('${docId}')" class="text-xs text-blue-600 font-bold hover:underline">
+                        ✏️ Editar
+                    </button>
+                    <button onclick="deletarComercio('${docId}')" class="text-xs text-red-600 font-bold hover:underline">
+                        🗑️ Excluir
+                    </button>
                 </div>
             </div>
         `;
     });
 });
 
-// 4. FUNÇÃO PARA SALVAR (Com proteção de Login e Upload de Imagem)
+// --- FUNÇÃO PARA DELETAR ---
+window.deletarComercio = async function(id) {
+    if (confirm("Tem certeza que deseja excluir este comércio permanentemente?")) {
+        try {
+            await db.collection("comercios").doc(id).delete();
+            alert("Comércio excluído com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir:", error);
+            alert("Erro ao excluir. Verifique se você tem permissão (Login).");
+        }
+    }
+};
+
+// --- FUNÇÃO PARA EDITAR (Puxa os dados para o formulário) ---
+window.editarComercio = async function(id) {
+    try {
+        // Puxa os dados específicos deste ID
+        const doc = await db.collection("comercios").doc(id).get();
+        if (doc.exists) {
+            const negocio = doc.data();
+            
+            // Preenche os campos do formulário
+            document.getElementById('reg-estado').value = negocio.estado;
+            document.getElementById('reg-nome').value = negocio.nome;
+            document.getElementById('reg-categoria').value = negocio.categoria;
+            document.getElementById('reg-descricao').value = negocio.descricao;
+            document.getElementById('reg-whatsapp').value = negocio.whatsapp;
+            
+            // Define que estamos em modo de edição e rola a tela para cima
+            idLojaEmEdicao = id;
+            document.querySelector('#form-cadastro button[type="submit"]').innerText = "Atualizar Dados";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch (error) {
+        console.error("Erro ao carregar dados para edição:", error);
+    }
+};
+
+// 4. FUNÇÃO PARA SALVAR (Criar Novo ou Atualizar Existente)
 var form = document.getElementById('form-cadastro');
 if (form) {
-    // CORRIGIDO: Adicionado o "async" na função para permitir o upload da imagem
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // VERIFICAÇÃO: O usuário está logado?
         var usuarioLogado = auth.currentUser;
         if (!usuarioLogado) {
-            alert("Você precisa fazer login com o Google para cadastrar uma loja!");
+            alert("Você precisa fazer login com o Google para alterar o sistema!");
             return;
         }
 
-        // CAPTURA E CONVERSÃO DA IMAGEM
-        const imagemInput = document.getElementById('imagem-loja'); // Certifique-se que o input type="file" no HTML tem id="imagem-loja"
+        const imagemInput = document.getElementById('imagem-loja'); 
         let imagemUrl = ""; 
         if (imagemInput && imagemInput.files.length > 0) {
             imagemUrl = await converterParaBase64(imagemInput.files[0]);
         }
 
-        // MONTAGEM DO OBJETO PARA O BANCO DE DADOS
-        var novaLoja = {
+        var dadosLoja = {
             estado: document.getElementById('reg-estado').value.toUpperCase(),
             nome: document.getElementById('reg-nome').value,
             categoria: document.getElementById('reg-categoria').value,
             descricao: document.getElementById('reg-descricao').value,
             whatsapp: document.getElementById('reg-whatsapp').value,
-            imagem: imagemUrl, // A foto salva em texto base64
-            criadoEm: new Date(),
             uid_usuario: usuarioLogado.uid
         };
 
-        // CORRIGIDO: Nome da coleção alterado de 'comerciantes' para 'comercios'
-        db.collection("comercios").add(novaLoja).then(function() {
-            alert("Cadastrado com sucesso!");
-            form.reset();
-        }).catch(function(error) {
-            console.error("Erro ao salvar:", error);
-            if (error.code === 'permission-denied') {
-                alert("Erro: Permissão negada. Verifique as regras do Firebase.");
+        // Só atualiza a imagem se o usuário tiver escolhido uma foto nova
+        if (imagemUrl !== "") {
+            dadosLoja.imagem = imagemUrl;
+        } else if (!idLojaEmEdicao) {
+            dadosLoja.criadoEm = new Date(); // Adiciona data apenas se for criação
+        }
+
+        try {
+            if (idLojaEmEdicao) {
+                // MODO ATUALIZAR
+                await db.collection("comercios").doc(idLojaEmEdicao).update(dadosLoja);
+                alert("Dados atualizados com sucesso!");
+                // Reseta o estado do formulário
+                idLojaEmEdicao = null;
+                document.querySelector('#form-cadastro button[type="submit"]').innerText = "Cadastrar Negócio";
             } else {
-                alert("Erro ao salvar! Tente novamente.");
+                // MODO CRIAR NOVO
+                await db.collection("comercios").add(dadosLoja);
+                alert("Cadastrado com sucesso!");
             }
-        });
+            form.reset();
+        } catch (error) {
+            console.error("Erro ao processar:", error);
+            alert("Erro na operação! Verifique as permissões.");
+        }
     });
 }
