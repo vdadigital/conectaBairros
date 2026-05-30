@@ -14,34 +14,46 @@ if (!firebase.apps.length) {
 }
 var db = firebase.firestore();
 
-// 2.1 INICIALIZAÇÃO DA AUTENTICAÇÃO (NOVO)
+// 2.1 INICIALIZAÇÃO DA AUTENTICAÇÃO
 var auth = firebase.auth();
 var provider = new firebase.auth.GoogleAuthProvider();
 
-// Função para o botão de Login (Chame isso no onclick do seu botão HTML)
+// Função para o botão de Login
 window.fazerLoginGoogle = function() {
     auth.signInWithPopup(provider)
         .then((result) => {
             var user = result.user;
             alert("Bem-vindo(a), " + user.displayName + "!");
             console.log("Usuário logado:", user);
-            // Aqui você pode mudar o texto do botão ou esconder a tela de login
         }).catch((error) => {
             console.error("Erro no login:", error);
             alert("Erro ao fazer login. Tente novamente.");
         });
 };
 
-// 3. FUNÇÃO PARA CARREGAR DADOS (Leitura pública)
-// Dentro do seu loop de leitura do Firebase (ex: querySnapshot.forEach)
+// --- FUNÇÃO AUXILIAR PARA A IMAGEM (NOVO) ---
+function converterParaBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// 3. FUNÇÃO PARA CARREGAR DADOS (Leitura Pública em Tempo Real)
 db.collection('comercios').onSnapshot((snapshot) => {
     const container = document.getElementById('container-comercios');
+    
+    // Trava de segurança: só tenta desenhar se a div existir na página
+    if (!container) return; 
+    
     container.innerHTML = ""; // Limpa antes de renderizar
 
     snapshot.forEach((doc) => {
-        const negocio = doc.to_dict ? doc.to_dict() : doc.data();
+        const negocio = doc.data(); // CORRIGIDO: Removido o to_dict() do Python
 
-        // VALIDAÇÃO DA IMAGEM: Se existir negócio.imagem usa ela, senão usa uma padrão da sua pasta img
+        // VALIDAÇÃO DA IMAGEM
         const fotoCard = negocio.imagem ? negocio.imagem : 'img/default-loja.png';
 
         // Montagem do card em Tailwind
@@ -67,47 +79,51 @@ db.collection('comercios').onSnapshot((snapshot) => {
         `;
     });
 });
-// 4. FUNÇÃO PARA SALVAR (Com proteção de Login)
+
+// 4. FUNÇÃO PARA SALVAR (Com proteção de Login e Upload de Imagem)
 var form = document.getElementById('form-cadastro');
 if (form) {
-    form.addEventListener('submit', function(e) {
+    // CORRIGIDO: Adicionado o "async" na função para permitir o upload da imagem
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // VERIFICAÇÃO: O usuário está logado? (NOVO)
+        // VERIFICAÇÃO: O usuário está logado?
         var usuarioLogado = auth.currentUser;
         if (!usuarioLogado) {
             alert("Você precisa fazer login com o Google para cadastrar uma loja!");
-            // Opcional: chamar a função de login automaticamente
-            // window.fazerLoginGoogle(); 
             return;
         }
 
+        // CAPTURA E CONVERSÃO DA IMAGEM
+        const imagemInput = document.getElementById('imagem-loja'); // Certifique-se que o input type="file" no HTML tem id="imagem-loja"
+        let imagemUrl = ""; 
+        if (imagemInput && imagemInput.files.length > 0) {
+            imagemUrl = await converterParaBase64(imagemInput.files[0]);
+        }
+
+        // MONTAGEM DO OBJETO PARA O BANCO DE DADOS
         var novaLoja = {
             estado: document.getElementById('reg-estado').value.toUpperCase(),
-            cidade: document.getElementById('reg-cidade').value,
             nome: document.getElementById('reg-nome').value,
             categoria: document.getElementById('reg-categoria').value,
             descricao: document.getElementById('reg-descricao').value,
             whatsapp: document.getElementById('reg-whatsapp').value,
+            imagem: imagemUrl, // A foto salva em texto base64
             criadoEm: new Date(),
-            uid_usuario: usuarioLogado.uid // Salva quem criou (útil para regras futuras)
+            uid_usuario: usuarioLogado.uid
         };
 
-        db.collection("comerciantes").add(novaLoja).then(function() {
+        // CORRIGIDO: Nome da coleção alterado de 'comerciantes' para 'comercios'
+        db.collection("comercios").add(novaLoja).then(function() {
             alert("Cadastrado com sucesso!");
             form.reset();
-            window.carregarDadosFiltrados();
         }).catch(function(error) {
             console.error("Erro ao salvar:", error);
-            // Se o erro for de permissão (regras do firebase), avisa o usuário
             if (error.code === 'permission-denied') {
-                alert("Erro: Permissão negada. Verifique se você está logado.");
+                alert("Erro: Permissão negada. Verifique as regras do Firebase.");
             } else {
                 alert("Erro ao salvar! Tente novamente.");
             }
         });
     });
 }
-
-// 5. Inicializa a lista ao abrir a página
-window.carregarDadosFiltrados();
