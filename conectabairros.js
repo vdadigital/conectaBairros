@@ -45,7 +45,7 @@ function converterParaBase64(file) {
 var idLojaEmEdicao = null;
 
 // 3. FUNÇÃO PARA CARREGAR DADOS (Com botões de Ação)
-db.collection('comerciantes').onSnapshot=> {
+db.collection('comerciantes').onSnapshot {
     const container = document.getElementById('container-comercios');
     if (!container) return; 
     
@@ -171,7 +171,7 @@ if (form) {
                 document.querySelector('#form-cadastro button[type="submit"]').innerText = "Cadastrar Negócio";
             } else {
                 // MODO CRIAR NOVO
-                await db.collection("comercios").add(dadosLoja);
+             await db.collection("comerciantes").add(dadosLoja)
                 alert("Cadastrado com sucesso!");
             }
             form.reset();
