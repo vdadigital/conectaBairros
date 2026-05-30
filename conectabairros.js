@@ -1,4 +1,6 @@
-// 1. Configuração do Firebase
+// ==========================================
+// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
+// ==========================================
 var firebaseConfig = {
     apiKey: "AIzaSyBAlXgCQ10YLWYfFi47cXelUKMYAF3DW-Q",
     authDomain: "conectabairros-dea35.firebaseapp.com",
@@ -8,30 +10,31 @@ var firebaseConfig = {
     appId: "1:215834992578:web:625ef084714b032fcfc05b"
 };
 
-// 2. Inicialização
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
-var db = firebase.firestore();
 
-// 2.1 INICIALIZAÇÃO DA AUTENTICAÇÃO
+var db = firebase.firestore();
 var auth = firebase.auth();
 var provider = new firebase.auth.GoogleAuthProvider();
 
-// Função para o botão de Login
+// Configuração Principal: Nome da coleção no banco de dados
+const NOME_COLECAO = "comerciantes"; 
+var idLojaEmEdicao = null;
+
+// ==========================================
+// 2. FUNÇÕES DE AUTENTICAÇÃO E IMAGEM
+// ==========================================
 window.fazerLoginGoogle = function() {
     auth.signInWithPopup(provider)
         .then((result) => {
-            var user = result.user;
-            alert("Bem-vindo(a), " + user.displayName + "!");
-            console.log("Usuário logado:", user);
+            alert("Bem-vindo(a), " + result.user.displayName + "!");
         }).catch((error) => {
             console.error("Erro no login:", error);
             alert("Erro ao fazer login. Tente novamente.");
         });
 };
 
-// --- FUNÇÃO AUXILIAR PARA A IMAGEM (NOVO) ---
 function converterParaBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -41,20 +44,29 @@ function converterParaBase64(file) {
     });
 }
 
-// --- VARIÁVEL GLOBAL PARA CONTROLE DE EDIÇÃO ---
-var idLojaEmEdicao = null;
-
-// 3. FUNÇÃO PARA CARREGAR DADOS (Com botões de Ação)
-db.collection('comerciantes').onSnapshot {
+// ==========================================
+// 3. LEITURA E RENDERIZAÇÃO DOS CARTÕES (READ)
+// ==========================================
+db.collection(NOME_COLECAO).onSnapshot((snapshot) => {
     const container = document.getElementById('container-comercios');
-    if (!container) return; 
     
-    container.innerHTML = ""; 
+    // Trava de segurança: Verifica se a div existe no HTML
+    if (!container) {
+        console.error("ERRO: A div com id 'container-comercios' não foi encontrada no HTML!");
+        return; 
+    }
+    
+    container.innerHTML = ""; // Limpa a tela antes de desenhar
+
+    if (snapshot.empty) {
+        console.warn("Aviso: A coleção está vazia ou não foi encontrada.");
+        container.innerHTML = "<p class='text-gray-500 col-span-full text-center py-8'>Nenhum comércio cadastrado ainda.</p>";
+        return;
+    }
 
     snapshot.forEach((doc) => {
         const negocio = doc.data(); 
-        const docId = doc.id; // O ID único gerado pelo Firebase!
-
+        const docId = doc.id; 
         const fotoCard = negocio.imagem ? negocio.imagem : 'img/default-loja.png';
 
         container.innerHTML += `
@@ -63,13 +75,13 @@ db.collection('comerciantes').onSnapshot {
                 
                 <div class="p-5 flex-grow">
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        ${negocio.categoria}
+                        ${negocio.categoria || 'Geral'}
                     </span>
                     <h3 class="text-xl font-bold text-gray-800 mt-2">${negocio.nome}</h3>
                     <p class="text-gray-500 text-sm mt-1 mb-4 line-clamp-2">${negocio.descricao}</p>
                     
                     <div class="flex justify-between items-center border-t pt-3 mb-3">
-                        <span class="text-xs font-semibold text-gray-400">📍 ${negocio.estado}</span>
+                        <span class="text-xs font-semibold text-gray-400">📍 ${negocio.estado || 'N/A'}</span>
                         <a href="https://wa.me/${negocio.whatsapp}" target="_blank" class="text-emerald-500 hover:text-emerald-600 text-sm font-bold flex items-center gap-1 transition">
                             💬 WhatsApp
                         </a>
@@ -89,35 +101,33 @@ db.collection('comerciantes').onSnapshot {
     });
 });
 
-// --- FUNÇÃO PARA DELETAR ---
+// ==========================================
+// 4. FUNÇÕES DE EDIÇÃO E EXCLUSÃO (UPDATE / DELETE)
+// ==========================================
 window.deletarComercio = async function(id) {
     if (confirm("Tem certeza que deseja excluir este comércio permanentemente?")) {
         try {
-            await db.collection("comercios").doc(id).delete();
+            await db.collection(NOME_COLECAO).doc(id).delete();
             alert("Comércio excluído com sucesso!");
         } catch (error) {
             console.error("Erro ao excluir:", error);
-            alert("Erro ao excluir. Verifique se você tem permissão (Login).");
+            alert("Erro ao excluir. Faça login primeiro.");
         }
     }
 };
 
-// --- FUNÇÃO PARA EDITAR (Puxa os dados para o formulário) ---
 window.editarComercio = async function(id) {
     try {
-        // Puxa os dados específicos deste ID
-        const doc = await db.collection("comercios").doc(id).get();
+        const doc = await db.collection(NOME_COLECAO).doc(id).get();
         if (doc.exists) {
             const negocio = doc.data();
             
-            // Preenche os campos do formulário
-            document.getElementById('reg-estado').value = negocio.estado;
-            document.getElementById('reg-nome').value = negocio.nome;
-            document.getElementById('reg-categoria').value = negocio.categoria;
-            document.getElementById('reg-descricao').value = negocio.descricao;
-            document.getElementById('reg-whatsapp').value = negocio.whatsapp;
+            document.getElementById('reg-estado').value = negocio.estado || '';
+            document.getElementById('reg-nome').value = negocio.nome || '';
+            document.getElementById('reg-categoria').value = negocio.categoria || '';
+            document.getElementById('reg-descricao').value = negocio.descricao || '';
+            document.getElementById('reg-whatsapp').value = negocio.whatsapp || '';
             
-            // Define que estamos em modo de edição e rola a tela para cima
             idLojaEmEdicao = id;
             document.querySelector('#form-cadastro button[type="submit"]').innerText = "Atualizar Dados";
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,7 +137,9 @@ window.editarComercio = async function(id) {
     }
 };
 
-// 4. FUNÇÃO PARA SALVAR (Criar Novo ou Atualizar Existente)
+// ==========================================
+// 5. SALVAR NOVO OU ATUALIZAR (CREATE / UPDATE)
+// ==========================================
 var form = document.getElementById('form-cadastro');
 if (form) {
     form.addEventListener('submit', async function(e) {
@@ -154,30 +166,26 @@ if (form) {
             uid_usuario: usuarioLogado.uid
         };
 
-        // Só atualiza a imagem se o usuário tiver escolhido uma foto nova
         if (imagemUrl !== "") {
             dadosLoja.imagem = imagemUrl;
         } else if (!idLojaEmEdicao) {
-            dadosLoja.criadoEm = new Date(); // Adiciona data apenas se for criação
+            dadosLoja.criadoEm = new Date();
         }
 
         try {
             if (idLojaEmEdicao) {
-                // MODO ATUALIZAR
-                await db.collection("comercios").doc(idLojaEmEdicao).update(dadosLoja);
+                await db.collection(NOME_COLECAO).doc(idLojaEmEdicao).update(dadosLoja);
                 alert("Dados atualizados com sucesso!");
-                // Reseta o estado do formulário
                 idLojaEmEdicao = null;
                 document.querySelector('#form-cadastro button[type="submit"]').innerText = "Cadastrar Negócio";
             } else {
-                // MODO CRIAR NOVO
-             await db.collection("comerciantes").add(dadosLoja)
+                await db.collection(NOME_COLECAO).add(dadosLoja);
                 alert("Cadastrado com sucesso!");
             }
             form.reset();
         } catch (error) {
             console.error("Erro ao processar:", error);
-            alert("Erro na operação! Verifique as permissões.");
+            alert("Erro na operação! Verifique se você está logado.");
         }
     });
 }
