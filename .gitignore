@@ -1,0 +1,40 @@
+# --- Android Studio / IntelliJ ---
+.gradle/
+build/
+captures/
+*.iml
+.idea/
+local.properties
+.externalNativeBuild/
+.cxx/
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- Dependências (Web/Node) ---
+node_modules/
+dist/
+build/
+.next/
+.vercel/
+
+# --- Firebase ---
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# --- SEGURANÇA (IMPORTANTE) ---
+# Se você tiver chaves de API sensíveis em arquivos .env
+.env
+.env.local
+
+# No Android, não suba sua chave de assinatura (keystore)
+*.jks
+*.keystore
+
+# --- Diversos ---
+.DS_Store
+Thumbs.db
+app/google-services.json
