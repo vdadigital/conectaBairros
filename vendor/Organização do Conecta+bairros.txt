@@ -1,0 +1,36 @@
+conectaBairros/
+│
+├── index.php
+├── login.php
+├── cadastro.php
+├── perfil.php
+├── meus-anuncios.php
+├── logout.php
+│
+├── api/
+│   ├── listar.php
+│   ├── salvar.php
+│   ├── editar.php
+│   ├── excluir.php
+│   └── upload.php
+│
+├── assets/
+│   ├── css/
+│   ├── js/
+│   ├── img/
+│   └── uploads/
+│
+├── config/
+│   ├── firebase.php
+│   ├── session.php
+│   └── constantes.php
+│
+├── includes/
+│   ├── header.php
+│   ├── navbar.php
+│   ├── footer.php
+│   └── auth.php
+│
+├── vendor/
+│
+└── README.md
