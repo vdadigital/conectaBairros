@@ -821,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * - Validação de tipo e tamanho de imagem
  * - Prevenção de alteração de uid_usuario
  * 
- * PERFORMANCE:
+ *PERFORMANCE:
  * - Apenas UM listener onSnapshot() ativo
  * - Renderização eficiente (innerHTML único)
  * - Limpeza de listeners quando necessário
