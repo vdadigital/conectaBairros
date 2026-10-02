@@ -184,10 +184,9 @@ async function converterImagemParaBase64(arquivo) {
                 let width = img.width;
                 let height = img.height;
 
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
+                const escala = Math.min(1, MAX_WIDTH / Math.max(width, height));
+                width = Math.max(1, Math.round(width * escala));
+                height = Math.max(1, Math.round(height * escala));
 
                 canvas.width = width;
                 canvas.height = height;
@@ -195,6 +194,7 @@ async function converterImagemParaBase64(arquivo) {
                 ctx.drawImage(img, 0, 0, width, height);
 
                 const base64 = canvas.toDataURL("image/jpeg", 0.75);
+                if (base64.length > 900000) { reject(new Error("A imagem comprimida é muito grande. Escolha uma imagem menor.")); return; }
                 resolve(base64);
             };
             
@@ -284,7 +284,7 @@ function renderizarCards(snapshot) {
         const botoesAcao = ehProprietario ? gerarBotoesAcao(docId) : "";
 
         html.push(`
-            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col comercio-card" data-estado="${negocio.estado || ''}" data-categoria="${negocio.categoria || ''}" data-owner="${negocio.uid_usuario || ''}">
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col comercio-card" data-estado="${negocio.estado || ''}" data-categoria="${negocio.categoria || ''}" data-owner="${negocio.uid_usuario || ''}" data-cidade="${negocio.cidade || ''}" data-bairro="${negocio.bairro || ''}">
                 <img src="${fotoCard}" alt="Logo de ${negocio.nome}" class="w-full h-48 object-cover" loading="lazy" onerror="this.onerror=null;this.src='${IMAGEM_PADRAO}'">
                 <div class="p-5 flex-grow">
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded">
@@ -293,7 +293,7 @@ function renderizarCards(snapshot) {
                     <h3 class="text-xl font-bold text-gray-800 mt-2 comercio-nome">${negocio.nome}</h3>
                     <p class="text-gray-500 text-sm mt-1 mb-4 line-clamp-2 comercio-descricao">${negocio.descricao}</p>
                     <div class="flex justify-between items-center border-t pt-3 mb-3">
-                        <span class="text-xs font-semibold text-gray-400">📍 ${negocio.estado || 'N/A'}</span>
+                        <span class="text-xs font-semibold text-gray-400">📍 ${[negocio.bairro, negocio.cidade, negocio.estado].filter(Boolean).join(' · ') || 'Localização não informada'}</span>
                         <a href="https://wa.me/${telefoneWhatsApp(dados.whatsapp)}" target="_blank" rel="noopener noreferrer" ${telefoneWhatsApp(dados.whatsapp) ? '' : 'aria-disabled="true" tabindex="-1"'} class="text-emerald-500 hover:text-emerald-600 text-sm font-bold flex items-center gap-1 transition">
                             💬 WhatsApp
                         </a>
@@ -331,6 +331,7 @@ function gerarBotoesAcao(docId) {
  */
 function validarFormulario() {
     const erros = [];
+    for (const id of ['reg-cidade','reg-bairro']) if (document.getElementById(id).value.trim().length > 100) erros.push('Cidade e bairro devem ter até 100 caracteres.');
 
     const nome = document.getElementById('reg-nome').value.trim();
     const categoria = document.getElementById('reg-categoria').value;
@@ -338,11 +339,11 @@ function validarFormulario() {
     const whatsapp = telefoneWhatsApp(document.getElementById('reg-whatsapp').value);
     const descricao = document.getElementById('reg-descricao').value.trim();
 
-    if (!nome) erros.push("Nome do negócio é obrigatório.");
-    if (!categoria) erros.push("Categoria é obrigatória.");
-    if (!estado) erros.push("Estado (UF) é obrigatório.");
+    if (!nome || nome.length > 150) erros.push("Informe um nome com até 150 caracteres.");
+    if (!['Alimentação','Serviços','Varejo','Saúde','Tecnologia','Comunicação','Outros'].includes(categoria)) erros.push("Selecione uma categoria válida.");
+    if (!['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(estado)) erros.push("Selecione uma UF brasileira válida.");
     if (!whatsapp) erros.push("Informe um WhatsApp brasileiro com DDD (10 ou 11 dígitos, com ou sem 55).");
-    if (!descricao) erros.push("Descrição é obrigatória.");
+    if (!descricao || descricao.length > 5000) erros.push("Informe uma descrição com até 5.000 caracteres.");
 
     return {
         valido: erros.length === 0,
@@ -398,7 +399,9 @@ async function salvarComercio() {
 
         // Monta objeto de dados (IMPEDE alteração de uid_usuario)
         const dadosLoja = {
-            estado: document.getElementById('reg-estado').value.toUpperCase(),
+            cidade: document.getElementById('reg-cidade').value.trim(),
+            bairro: document.getElementById('reg-bairro').value.trim(),
+            estado: document.getElementById('reg-estado').value.trim().toUpperCase(),
             nome: document.getElementById('reg-nome').value.trim(),
             categoria: document.getElementById('reg-categoria').value,
             descricao: document.getElementById('reg-descricao').value.trim(),
@@ -470,7 +473,7 @@ window.editarComercio = async function(id) {
         const negocio = doc.data();
 
         // Verifica permissão (SEGURANÇA)
-        const ehAdmin = usuarioAtual && usuarioAtual.tipo === "admin";
+        const ehAdmin = false; // Permissões de gestão são exclusivamente do proprietário.
         const ehProprietario = negocio.uid_usuario === usuario.uid;
         
         if (!ehAdmin && !ehProprietario) {
@@ -522,7 +525,7 @@ window.deletarComercio = async function(id) {
         const comercio = doc.data();
 
         // Verifica permissão (SEGURANÇA)
-        const ehAdminExclusao = usuarioAtual && usuarioAtual.tipo === "admin";
+        const ehAdminExclusao = false;
         const ehProprietarioExclusao = comercio.uid_usuario === usuario.uid;
         
         if (!ehAdminExclusao && !ehProprietarioExclusao) {
@@ -549,6 +552,8 @@ window.deletarComercio = async function(id) {
  * @param {Object} negocio - Dados do comércio
  */
 function preencherFormulario(negocio) {
+    document.getElementById('reg-cidade').value = negocio.cidade || '';
+    document.getElementById('reg-bairro').value = negocio.bairro || '';
     document.getElementById('reg-estado').value = negocio.estado || '';
     document.getElementById('reg-nome').value = negocio.nome || '';
     document.getElementById('reg-categoria').value = negocio.categoria || '';
@@ -593,6 +598,7 @@ function resetarModoEdicao() {
 
 function criarCampoPesquisa() {
     document.getElementById('input-busca').addEventListener('input',filtrarCards);
+    for (const id of ['filtro-cidade','filtro-bairro']) document.getElementById(id).addEventListener('input',filtrarCards);
     for (const id of ['filtro-categoria','filtro-meus']) document.getElementById(id).addEventListener('change',filtrarCards);
 }
 window.filtrarComercios = function(termo) {
@@ -600,11 +606,13 @@ window.filtrarComercios = function(termo) {
     const estado = document.getElementById('filtro-estado').value;
     const categoria = document.getElementById('filtro-categoria').value;
     const meus = document.getElementById('filtro-meus').checked;
+    const cidade = normalizarTexto(document.getElementById('filtro-cidade').value);
+    const bairro = normalizarTexto(document.getElementById('filtro-bairro').value);
     let encontrados = 0;
     const cards = document.querySelectorAll('.comercio-card');
     cards.forEach(card => {
         const texto = [card.querySelector('.comercio-nome').textContent,card.querySelector('.comercio-descricao').textContent,card.dataset.categoria].join(' ');
-        const visivel = normalizarTexto(texto).includes(busca) && (estado === 'Todos' || normalizarTexto(card.dataset.estado) === normalizarTexto(estado)) && (categoria === 'Todos' || normalizarTexto(card.dataset.categoria) === normalizarTexto(categoria)) && (!meus || card.dataset.owner === auth.currentUser?.uid);
+        const visivel = normalizarTexto(texto).includes(busca) && normalizarTexto(card.dataset.cidade).includes(cidade) && normalizarTexto(card.dataset.bairro).includes(bairro) && (estado === 'Todos' || normalizarTexto(card.dataset.estado) === normalizarTexto(estado)) && (categoria === 'Todos' || normalizarTexto(card.dataset.categoria) === normalizarTexto(categoria)) && (!meus || card.dataset.owner === auth.currentUser?.uid);
         card.style.display = visivel ? 'flex' : 'none';
         if (visivel) encontrados++;
     });
@@ -614,6 +622,8 @@ window.filtrarComercios = function(termo) {
 window.filtrarCards = function() { filtrarComercios(document.getElementById('input-busca').value); };
 window.limparFiltros = function() {
     document.getElementById('input-busca').value = '';
+    document.getElementById('filtro-cidade').value = '';
+    document.getElementById('filtro-bairro').value = '';
     document.getElementById('filtro-estado').value = 'Todos';
     document.getElementById('filtro-categoria').value = 'Todos';
     document.getElementById('filtro-meus').checked = false;
