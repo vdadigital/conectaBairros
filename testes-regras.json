@@ -1,0 +1,191 @@
+{
+  "environment": "Firebase Firestore Emulator; demo project; no production access",
+  "count": 37,
+  "results": [
+    {
+      "test": "Visitante não cria negócio",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A cria negócio próprio",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "Visitante lê catálogo",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "A não cria negócio de B",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A edita próprio negócio e localização",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "B não edita negócio de A",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A não troca dono",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A não troca data de criação",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: estado",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: categoria",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: whatsapp",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: nome",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: descricao",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: cidade",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: bairro",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: rua",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: numero",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: imagem",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia campo inválido: privado",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Bloqueia imagem excessiva",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Aceita imagem Base64 limitada",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "A cria perfil empreendedor",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "A lê próprio perfil",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "B não lê perfil de A",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Visitante não lê perfil",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A não lista perfis",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Perfil não altera tipo",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Perfil não altera ativo",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Perfil não altera email",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Perfil não altera uid",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Perfil altera nome/foto",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "B não cria perfil administrador",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A não cria perfil em nome de B",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "Legado mantém imagem e recebe localização",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "B não exclui negócio de A",
+      "expected": "bloqueado",
+      "result": "passou"
+    },
+    {
+      "test": "A exclui próprio negócio",
+      "expected": "permitido",
+      "result": "passou"
+    },
+    {
+      "test": "Coleção desconhecida é bloqueada",
+      "expected": "bloqueado",
+      "result": "passou"
+    }
+  ]
+}
