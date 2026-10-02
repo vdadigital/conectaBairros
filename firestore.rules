@@ -1,37 +1,62 @@
 rules_version = '2';
-
 service cloud.firestore {
-
   match /databases/{database}/documents {
-
-    match /comerciantes/{comercioId} {
-
+    function autenticado() { return request.auth != null; }
+    function texto(value, maximo) {
+      return value is string && value.size() > 0 && value.size() <= maximo;
+    }
+    function camposNegocio(d) {
+      return texto(d.nome, 150)
+        && texto(d.descricao, 5000)
+        && d.categoria in ['Alimentação', 'Serviços', 'Varejo', 'Saúde', 'Tecnologia', 'Comunicação', 'Outros']
+        && d.estado in ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+        && d.whatsapp is string && d.whatsapp.matches('^55[0-9]{10,11}$')
+        && d.atualizadoEm == request.time;
+    }
+    function imagemValida(d) {
+      return !('imagem' in d) || (d.imagem is string && d.imagem.size() <= 900000
+        && d.imagem.matches('^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$'));
+    }
+    function localValido(d) {
+      return (!('cidade' in d) || (d.cidade is string && d.cidade.size() <= 100))
+        && (!('bairro' in d) || (d.bairro is string && d.bairro.size() <= 100));
+    }
+    match /comerciantes/{id} {
+      // Catálogo público. Não armazene dados privados nesta coleção.
       allow read: if true;
-
-      allow create: if request.auth != null;
-
-      allow update:
-          if request.auth != null
-          && request.auth.uid == resource.data.uid_usuario;
-
-      allow delete:
-          if request.auth != null
-          && request.auth.uid == resource.data.uid_usuario;
+      allow create: if autenticado()
+        && request.resource.data.keys().hasAll(['nome','descricao','categoria','estado','whatsapp','uid_usuario','criadoEm','atualizadoEm'])
+        && request.resource.data.keys().hasOnly(['nome','descricao','categoria','estado','whatsapp','uid_usuario','criadoEm','atualizadoEm','imagem','cidade','bairro'])
+        && request.resource.data.uid_usuario == request.auth.uid
+        && request.resource.data.criadoEm == request.time
+        && camposNegocio(request.resource.data) && imagemValida(request.resource.data) && localValido(request.resource.data);
+      allow update: if autenticado()
+        && resource.data.uid_usuario == request.auth.uid
+        && request.resource.data.uid_usuario == resource.data.uid_usuario
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome','descricao','categoria','estado','whatsapp','atualizadoEm','imagem','cidade','bairro'])
+        && camposNegocio(request.resource.data) && localValido(request.resource.data)
+        // Imagens legadas são mantidas; imagens novas ou alteradas são validadas.
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['imagem']) || imagemValida(request.resource.data));
+      allow delete: if autenticado() && resource.data.uid_usuario == request.auth.uid;
     }
-
     match /usuarios/{uid} {
-
-      allow create:
-          if request.auth != null
-          && request.auth.uid == uid;
-
-      allow read:
-          if request.auth != null
-          && request.auth.uid == uid;
-
-      allow update:
-          if request.auth != null
-          && request.auth.uid == uid;
+      allow get: if autenticado() && request.auth.uid == uid;
+      allow create: if autenticado() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['uid','nome','email','foto','tipo','ativo','criadoEm'])
+        && request.resource.data.keys().hasOnly(['uid','nome','email','foto','tipo','ativo','criadoEm'])
+        && request.resource.data.uid == uid
+        && request.resource.data.tipo == 'empreendedor'
+        && request.resource.data.ativo == true
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+        && request.resource.data.foto is string && request.resource.data.foto.size() <= 2048
+        && request.resource.data.criadoEm == request.time;
+      // Papel, UID, email e status não podem ser modificados pelo navegador.
+      allow update: if autenticado() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome','foto'])
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+        && request.resource.data.foto is string && request.resource.data.foto.size() <= 2048;
     }
+    // Coleções e subcoleções não listadas permanecem sem acesso.
   }
 }
