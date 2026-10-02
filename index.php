@@ -47,57 +47,8 @@
 
         </div><div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-200 h-fit">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Cadastrar Negócio</h2>
-                
-                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro">
-                    <div class="mb-3">
-                        <label for="reg-nome" class="block text-sm font-semibold text-gray-700">Nome do Negócio</label>
-                        <input type="text" id="reg-nome" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="reg-categoria" class="block text-sm font-semibold text-gray-700">Categoria</label>
-                        <select id="reg-categoria" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="">Selecione...</option>
-                            <option value="Alimentação">Alimentação</option>
-                            <option value="Serviços">Serviços</option>
-                            <option value="Varejo">Varejo</option>
-                            <option value="Saúde">Saúde e Beleza</option>
-                            <option value="Tecnologia">Tecnologia</option>
-                              <option value="Comunicação">Jornalismo</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="reg-estado" class="block text-sm font-semibold text-gray-700">Estado (UF)</label>
-                        <input type="text" id="reg-estado" required maxlength="2" placeholder="Ex: SC" class="mt-1 w-full p-2 border rounded uppercase focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="reg-whatsapp" class="block text-sm font-semibold text-gray-700">WhatsApp (Apenas números)</label>
-                        <input type="text" inputmode="tel" id="reg-whatsapp" required placeholder="Ex: 5548999999999" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="reg-descricao" class="block text-sm font-semibold text-gray-700">Descrição</label>
-                        <textarea id="reg-descricao" required rows="3" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                    </div>
-
-                    <div class="mb-5">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Foto ou Logo (Opcional)</label>
-                        <input type="file" id="imagem-loja" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 transition shadow-md">
-                        Cadastrar Negócio
-                    </button>
-                </form>
-            </div>
-
             <div class="lg:col-span-2">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Comércios Locais</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Encontre serviços perto de você</h2><p class="mb-4 text-gray-600">Busque por serviço, estado, cidade ou bairro. Para falar com um negócio, use o botão WhatsApp.</p>
                 <div id="filtros" class="filter-panel"><div class="search-field"><label for="input-busca">O que você procura?</label><input id="input-busca" type="search" placeholder="Nome, categoria ou serviço" autocomplete="off"></div>
     <label for="filtro-estado">Estado</label>
     <select id="filtro-estado" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none flex-grow">
@@ -130,7 +81,7 @@
         <option value="SE">Sergipe</option>
         <option value="TO">Tocantins</option>
     </select>
-    <label for="filtro-categoria">Categoria</label><select id="filtro-categoria"><option value="Todos">Todas as categorias</option><option value="Alimentação">Alimentação</option><option value="Serviços">Serviços</option><option value="Varejo">Varejo</option><option value="Saúde">Saúde e Beleza</option><option value="Tecnologia">Tecnologia</option><option value="Comunicação">Jornalismo</option><option value="Outros">Outros</option></select><label class="my-business"><input type="checkbox" id="filtro-meus" disabled> Somente meus negócios</label><button type="button" onclick="limparFiltros()">Limpar filtros</button><button type="button" onclick="filtrarCards()" class="bg-gray-800 text-white font-bold py-2 px-6 rounded hover:bg-gray-900 transition">
+    <label for="filtro-cidade">Cidade</label><input id="filtro-cidade" type="search" placeholder="Todas as cidades"><label for="filtro-bairro">Bairro</label><input id="filtro-bairro" type="search" placeholder="Todos os bairros"><label for="filtro-categoria">Categoria</label><select id="filtro-categoria"><option value="Todos">Todas as categorias</option><option value="Alimentação">Alimentação</option><option value="Serviços">Serviços</option><option value="Varejo">Varejo</option><option value="Saúde">Saúde e Beleza</option><option value="Tecnologia">Tecnologia</option><option value="Comunicação">Jornalismo</option><option value="Outros">Outros</option></select><label class="my-business"><input type="checkbox" id="filtro-meus" disabled> Somente meus negócios</label><button type="button" onclick="limparFiltros()">Limpar filtros</button><button type="button" onclick="filtrarCards()" class="bg-gray-800 text-white font-bold py-2 px-6 rounded hover:bg-gray-900 transition">
         🔍 Filtrar
     </button>
 </div>
@@ -140,7 +91,56 @@
                     </div>
                 </div>
             </div>
+<div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-200 h-fit">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Cadastrar Negócio</h2>
+                
+                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro"><div class="mb-3"><label for="reg-cidade" class="block text-sm font-semibold text-gray-700">Cidade (opcional)</label><input id="reg-cidade" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-level2"></div><div class="mb-3"><label for="reg-bairro" class="block text-sm font-semibold text-gray-700">Bairro (opcional)</label><input id="reg-bairro" maxlength="100" class="mt-1 w-full p-2 border rounded"></div>
+                    <div class="mb-3">
+                        <label for="reg-nome" class="block text-sm font-semibold text-gray-700">Nome do Negócio</label>
+                        <input type="text" maxlength="150" id="reg-nome" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reg-categoria" class="block text-sm font-semibold text-gray-700">Categoria</label>
+                        <select id="reg-categoria" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Selecione...</option>
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Serviços">Serviços</option>
+                            <option value="Varejo">Varejo</option>
+                            <option value="Saúde">Saúde e Beleza</option>
+                            <option value="Tecnologia">Tecnologia</option>
+                              <option value="Comunicação">Jornalismo</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reg-estado" class="block text-sm font-semibold text-gray-700">Estado (UF)</label>
+                        <input type="text" id="reg-estado" required maxlength="2" placeholder="Ex: SC" class="mt-1 w-full p-2 border rounded uppercase focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reg-whatsapp" class="block text-sm font-semibold text-gray-700">WhatsApp (Apenas números)</label>
+                        <input type="text" inputmode="tel" id="reg-whatsapp" required placeholder="Ex: 5548999999999" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reg-descricao" class="block text-sm font-semibold text-gray-700">Descrição</label>
+                        <textarea maxlength="5000" id="reg-descricao" required rows="3" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    </div>
 
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Foto ou Logo (Opcional)</label>
+                        <input type="file" id="imagem-loja" accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 transition shadow-md">
+                        Cadastrar Negócio
+                    </button>
+                </form>
+            </div>
+
+            
         </div>
     </main>
 
@@ -194,7 +194,7 @@
         <p class="text-sm">© 2026 Conecta Bairros. Projeto Académico FASPEC.</p>
     </footer>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <script src="assets/js/conectabairros-v2.js?v=2"></script>
+    <script src="assets/js/conectabairros-v3.js?v=seguranca-1"></script>
 </body>
 </html>
 
