@@ -94,7 +94,7 @@
 <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-200 h-fit">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Cadastrar Negócio</h2>
                 
-                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro"><div class="mb-3"><label for="reg-cidade" class="block text-sm font-semibold text-gray-700">Cidade (opcional)</label><input id="reg-cidade" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-level2"></div><div class="mb-3"><label for="reg-bairro" class="block text-sm font-semibold text-gray-700">Bairro (opcional)</label><input id="reg-bairro" maxlength="100" class="mt-1 w-full p-2 border rounded"></div>
+                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro"><p class="form-help">O endereço informado será público na página do negócio. Informe o local de atendimento.</p><div class="mb-3"><label for="reg-rua" class="block text-sm font-semibold text-gray-700">Rua / avenida (opcional)</label><input id="reg-rua" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-line1"></div><div class="mb-3"><label for="reg-numero" class="block text-sm font-semibold text-gray-700">Número (opcional)</label><input id="reg-numero" maxlength="20" placeholder="Ex: 1904 ou s/n" class="mt-1 w-full p-2 border rounded"></div><div class="mb-3"><label for="reg-cidade" class="block text-sm font-semibold text-gray-700">Cidade (opcional)</label><input id="reg-cidade" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-level2"></div><div class="mb-3"><label for="reg-bairro" class="block text-sm font-semibold text-gray-700">Bairro (opcional)</label><input id="reg-bairro" maxlength="100" class="mt-1 w-full p-2 border rounded"></div>
                     <div class="mb-3">
                         <label for="reg-nome" class="block text-sm font-semibold text-gray-700">Nome do Negócio</label>
                         <input type="text" maxlength="150" id="reg-nome" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
@@ -194,8 +194,6 @@
         <p class="text-sm">© 2026 Conecta Bairros. Projeto Académico FASPEC.</p>
     </footer>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <script src="assets/js/conectabairros-v3.js?v=seguranca-1"></script>
+    <script src="assets/js/conectabairros-v4.js?v=paginas-1"></script>
 </body>
 </html>
-
-
