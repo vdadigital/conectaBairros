@@ -150,4 +150,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 
                     <div class="mb-5">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Foto ou Logo (Opcional)</label>
-                        <input type="file" id="imagem-loja" accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px
+                        <input type="file" id="imagem-loja" accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500">
+                        <p class="text-xs text-gray-500 mt-2">JPG, PNG ou WEBP, até 2 MB.</p>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Cadastrar Negócio</button>
+                    <button type="button" onclick="resetarModoEdicao();limparFormulario()" class="w-full mt-3 py-2 border rounded-lg">Cancelar edição / limpar</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer class="text-center p-6 text-gray-600">Conecta Bairros · Conectando empreendedores e a comunidade</footer>
+    <script src="assets/js/conectabairros-admin-v1.js?v=1"></script>
+</body>
+</html>
