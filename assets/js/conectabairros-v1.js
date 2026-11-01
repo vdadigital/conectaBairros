@@ -34,6 +34,8 @@ const IMAGEM_PADRAO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 
 let idLojaEmEdicao = null;
 let unsubscribeComercios = null; // Controla listener do Firestore
+let administradorAtual = false;
+function podeAdministrar() { return administradorAtual; }
 let usuarioAtual = null; // Armazena dados do usuário logado
 
 // ==========================================
@@ -106,10 +108,15 @@ window.fazerLogoutGoogle = async function() {
 auth.onAuthStateChanged(async usuario => {
     const revision = ++authRevision;
     usuarioAtual = null;
+    administradorAtual = false;
     if (!usuario) { resetarModoEdicao(); limparFormulario(); }
     atualizarConta(usuario);
     if (!usuario) return;
     try {
+        const token = await usuario.getIdTokenResult();
+        if (revision !== authRevision) return;
+        administradorAtual = token.claims.email === 'vdadigital@gmail.com' && token.claims.email_verified === true && token.claims.firebase?.sign_in_provider === 'google.com';
+        atualizarConta(usuario, administradorAtual ? 'Administrador: você pode editar os anúncios do catálogo. A propriedade de cada anúncio será preservada.' : undefined);
         const ref = db.collection('usuarios').doc(usuario.uid);
         const doc = await ref.get();
         if (!doc.exists) await ref.set({ uid:usuario.uid, nome:usuario.displayName || '', email:usuario.email || '', foto:usuario.photoURL || '', tipo:'empreendedor', ativo:true, criadoEm:firebase.firestore.FieldValue.serverTimestamp() });
@@ -282,7 +289,7 @@ function renderizarCards(snapshot) {
         
         // Verifica se o usuário atual é o proprietário
         const ehProprietario = auth.currentUser && auth.currentUser.uid === negocio.uid_usuario;
-        const botoesAcao = ehProprietario ? gerarBotoesAcao(docId) : "";
+        const botoesAcao = (ehProprietario || podeAdministrar()) ? gerarBotoesAcao(docId) : "";
 
         html.push(`
             <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col comercio-card" data-estado="${negocio.estado || ''}" data-categoria="${negocio.categoria || ''}" data-owner="${negocio.uid_usuario || ''}" data-cidade="${negocio.cidade || ''}" data-bairro="${negocio.bairro || ''}">
@@ -428,10 +435,12 @@ async function salvarComercio() {
             }
             
             const dadosDoc = doc.data();
-            if (dadosDoc.uid_usuario !== usuarioLogado.uid) {
+            if (dadosDoc.uid_usuario !== usuarioLogado.uid && !podeAdministrar()) {
                 throw new Error("Você não tem permissão para editar este comércio.");
             }
 
+            // Editar como administrador não transfere a propriedade.
+            delete dadosLoja.uid_usuario;
             await db.collection(NOME_COLECAO).doc(idLojaEmEdicao).update(dadosLoja);
             mostrarSucesso("Dados atualizados com sucesso!");
             resetarModoEdicao();
@@ -477,7 +486,7 @@ window.editarComercio = async function(id) {
         const negocio = doc.data();
 
         // Verifica permissão (SEGURANÇA)
-        const ehAdmin = false; // Permissões de gestão são exclusivamente do proprietário.
+        const ehAdmin = podeAdministrar();
         const ehProprietario = negocio.uid_usuario === usuario.uid;
         
         if (!ehAdmin && !ehProprietario) {
@@ -529,7 +538,7 @@ window.deletarComercio = async function(id) {
         const comercio = doc.data();
 
         // Verifica permissão (SEGURANÇA)
-        const ehAdminExclusao = false;
+        const ehAdminExclusao = podeAdministrar();
         const ehProprietarioExclusao = comercio.uid_usuario === usuario.uid;
         
         if (!ehAdminExclusao && !ehProprietarioExclusao) {
