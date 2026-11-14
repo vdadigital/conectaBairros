@@ -23,20 +23,30 @@ service cloud.firestore {
         && (!('rua' in d) || (d.rua is string && d.rua.size() <= 100))
         && (!('numero' in d) || (d.numero is string && d.numero.size() <= 20));
     }
+    function profissionalValido(d) {
+      return !('profissao' in d) || (texto(d.profissao, 80)
+        && d.profissao.matches('.*[^\\s].*')
+        && d.categoria == 'Serviços'
+        && 'cidade' in d && texto(d.cidade, 100) && d.cidade.matches('.*[^\\s].*')
+        && d.get('rua', '') == ''
+        && d.get('numero', '') == '');
+    }
     match /comerciantes/{id} {
       // Catálogo público. Não armazene dados privados nesta coleção.
       allow read: if true;
       allow create: if autenticado()
         && request.resource.data.keys().hasAll(['nome','descricao','categoria','estado','whatsapp','uid_usuario','criadoEm','atualizadoEm'])
-        && request.resource.data.keys().hasOnly(['nome','descricao','categoria','estado','whatsapp','uid_usuario','criadoEm','atualizadoEm','imagem','cidade','bairro','rua','numero'])
+        && request.resource.data.keys().hasOnly(['nome','descricao','categoria','estado','whatsapp','uid_usuario','criadoEm','atualizadoEm','imagem','cidade','bairro','rua','numero','profissao'])
         && request.resource.data.uid_usuario == request.auth.uid
         && request.resource.data.criadoEm == request.time
-        && camposNegocio(request.resource.data) && imagemValida(request.resource.data) && localValido(request.resource.data);
+        && camposNegocio(request.resource.data) && imagemValida(request.resource.data) && localValido(request.resource.data)
+        && profissionalValido(request.resource.data);
       allow update: if autenticado()
         && resource.data.uid_usuario == request.auth.uid
         && request.resource.data.uid_usuario == resource.data.uid_usuario
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome','descricao','categoria','estado','whatsapp','atualizadoEm','imagem','cidade','bairro','rua','numero'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome','descricao','categoria','estado','whatsapp','atualizadoEm','imagem','cidade','bairro','rua','numero','profissao'])
         && camposNegocio(request.resource.data) && localValido(request.resource.data)
+        && profissionalValido(request.resource.data)
         // Imagens legadas são mantidas; imagens novas ou alteradas são validadas.
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['imagem']) || imagemValida(request.resource.data));
       allow delete: if autenticado() && resource.data.uid_usuario == request.auth.uid;

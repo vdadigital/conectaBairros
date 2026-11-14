@@ -40,7 +40,7 @@ async function carregarNegocio() {
         const n = registro.data();
         document.getElementById('nome').textContent = valor(n.nome) || 'Negócio local';
         document.title = (valor(n.nome) || 'Negócio local') + ' | Conecta Bairros';
-        document.getElementById('categoria').textContent = valor(n.categoria) || 'Negócio local';
+        document.getElementById('categoria').textContent = valor(n.profissao) || valor(n.categoria) || 'Negócio local';
         document.getElementById('descricao').textContent = valor(n.descricao) || 'Descrição ainda não informada.';
         const foto = document.getElementById('foto');
         const imagem = valor(n.imagem);
