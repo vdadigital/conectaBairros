@@ -57,7 +57,7 @@ if ($chave === '') {
     $chave = trim((string) @file_get_contents($arquivoChave, false, null, 0, 512));
 }
 $modelo = getenv('GEMINI_MODEL') ?: 'gemini-3.5-flash';
-if (!preg_match('/^[A-Za-z0-9._-]+$/D', $chave) || !preg_match('/^[a-zA-Z0-9_-]+$/D', $modelo)) {
+if (!preg_match('/^[A-Za-z0-9._-]+$/D', $chave) || !preg_match('/^[a-zA-Z0-9._-]+$/D', $modelo)) {
     responder(503, ['erro' => 'A pesquisa com IA ainda não está configurada. Use os filtros do balcão.']);
 }
 
@@ -122,4 +122,5 @@ if (!is_string($resposta) || trim($resposta) === '' || !is_array($indices) || !a
 }
 $indices = array_values(array_unique(array_filter($indices, static fn ($i) => is_int($i) && isset($catalogo[$i]))));
 responder(200, ['resposta' => trim($resposta), 'indices' => array_slice($indices, 0, 3)]);
+
 
