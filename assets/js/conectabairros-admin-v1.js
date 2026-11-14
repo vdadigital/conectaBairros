@@ -53,6 +53,28 @@ let authRevision = 0;
 let ultimoSnapshot = null;
 function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function normalizarTexto(value) { return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function profissaoDoAnuncio(dados) {
+    return typeof dados.profissao === 'string' ? dados.profissao.trim() : '';
+}
+function anuncioProfissional() {
+    return document.getElementById('reg-tipo').value === 'profissional';
+}
+function atualizarCamposAnuncio() {
+    const profissional = anuncioProfissional();
+    for (const id of ['categoria', 'rua', 'numero']) {
+        document.getElementById('campo-' + id).hidden = profissional;
+        document.getElementById('reg-' + id).disabled = profissional;
+    }
+    const profissao = document.getElementById('reg-profissao');
+    document.getElementById('campo-profissao').hidden = !profissional;
+    profissao.disabled = !profissional;
+    profissao.required = profissional;
+    document.getElementById('reg-cidade').required = profissional;
+    document.getElementById('reg-categoria').required = !profissional;
+    document.getElementById('ajuda-endereco').textContent = profissional
+        ? 'Informe a cidade e, se quiser, o bairro onde você atende. Esses dados e o WhatsApp serão públicos.'
+        : 'O endereço informado será público. Informe o local de atendimento.';
+}
 function telefoneWhatsApp(value) {
     let numero = String(value ?? '').replace(/\D/g,'');
     if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
@@ -70,7 +92,7 @@ function atualizarConta(usuario, mensagem) {
     const meus = document.getElementById('filtro-meus');
     meus.disabled = !usuario;
     if (!usuario) meus.checked = false;
-    document.getElementById('cadastro-ajuda').textContent = usuario ? 'Os negócios cadastrados ficam vinculados à sua conta.' : 'Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.';
+    document.getElementById('cadastro-ajuda').textContent = usuario ? 'Os anúncios publicados ficam vinculados à sua conta.' : 'Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.';
     if (ultimoSnapshot) {
         document.getElementById('container-comercios').innerHTML = renderizarCards(ultimoSnapshot);
         filtrarCards();
@@ -283,6 +305,7 @@ function renderizarCards(snapshot) {
     snapshot.forEach((doc) => {
         const dados = doc.data();
         const negocio = Object.fromEntries(Object.entries(dados).map(([key,value]) => [key, escapeHTML(value)]));
+        const profissao = profissaoDoAnuncio(dados);
         const docId = doc.id;
         const pagina = "negocio.php?id=" + encodeURIComponent(docId);
         const fotoCard = /^(https:\/\/|data:image\/(jpeg|png|webp);base64,)/i.test(dados.imagem || "") ? negocio.imagem : IMAGEM_PADRAO;
@@ -292,11 +315,11 @@ function renderizarCards(snapshot) {
         const botoesAcao = (ehProprietario || podeAdministrar()) ? gerarBotoesAcao(docId) : "";
 
         html.push(`
-            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col comercio-card" data-estado="${negocio.estado || ''}" data-categoria="${negocio.categoria || ''}" data-owner="${negocio.uid_usuario || ''}" data-cidade="${negocio.cidade || ''}" data-bairro="${negocio.bairro || ''}">
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col comercio-card" data-profissao="${escapeHTML(profissao)}" data-estado="${negocio.estado || ''}" data-categoria="${negocio.categoria || ''}" data-owner="${negocio.uid_usuario || ''}" data-cidade="${negocio.cidade || ''}" data-bairro="${negocio.bairro || ''}">
                 <a href="${pagina}" aria-label="${escapeHTML('Ver detalhes de ' + dados.nome)}"><img src="${fotoCard}" alt="Logo de ${negocio.nome}" class="w-full h-48 object-cover" loading="lazy" onerror="this.onerror=null;this.src='${IMAGEM_PADRAO}'"></a>
                 <div class="p-5 flex-grow">
                     <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        ${negocio.categoria || 'Geral'}
+                        ${escapeHTML(profissao) || negocio.categoria || 'Geral'}
                     </span>
                     <h3 class="text-xl font-bold text-gray-800 mt-2 comercio-nome"><a href="${pagina}" class="hover:underline">${negocio.nome}</a></h3>
                     <p class="text-gray-500 text-sm mt-1 mb-4 line-clamp-2 comercio-descricao">${negocio.descricao}</p>
@@ -343,7 +366,11 @@ function validarFormulario() {
     for (const id of ['reg-cidade','reg-bairro','reg-rua']) if (document.getElementById(id).value.trim().length > 100) erros.push('Cidade e bairro devem ter até 100 caracteres.');
 
     const nome = document.getElementById('reg-nome').value.trim();
-    const categoria = document.getElementById('reg-categoria').value;
+    const profissional = anuncioProfissional();
+    const profissao = document.getElementById('reg-profissao').value.trim();
+    const categoria = profissional ? 'Serviços' : document.getElementById('reg-categoria').value;
+    if (profissional && (!profissao || profissao.length > 80)) erros.push('Informe uma profissão com até 80 caracteres.');
+    if (profissional && !document.getElementById('reg-cidade').value.trim()) erros.push('Informe a cidade de atendimento.');
     const estado = document.getElementById('reg-estado').value.trim().toUpperCase();
     const whatsapp = telefoneWhatsApp(document.getElementById('reg-whatsapp').value);
     const descricao = document.getElementById('reg-descricao').value.trim();
@@ -407,19 +434,22 @@ async function salvarComercio() {
         }
 
         // Monta objeto de dados (IMPEDE alteração de uid_usuario)
+        const profissional = anuncioProfissional();
         const dadosLoja = {
-            rua: document.getElementById('reg-rua').value.trim(),
-            numero: document.getElementById('reg-numero').value.trim(),
+            rua: profissional ? '' : document.getElementById('reg-rua').value.trim(),
+            numero: profissional ? '' : document.getElementById('reg-numero').value.trim(),
             cidade: document.getElementById('reg-cidade').value.trim(),
             bairro: document.getElementById('reg-bairro').value.trim(),
             estado: document.getElementById('reg-estado').value.trim().toUpperCase(),
             nome: document.getElementById('reg-nome').value.trim(),
-            categoria: document.getElementById('reg-categoria').value,
+            categoria: profissional ? 'Serviços' : document.getElementById('reg-categoria').value,
             descricao: document.getElementById('reg-descricao').value.trim(),
             whatsapp: telefoneWhatsApp(document.getElementById('reg-whatsapp').value),
             uid_usuario: usuarioLogado.uid,
             atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
         };
+
+        if (profissional) dadosLoja.profissao = document.getElementById('reg-profissao').value.trim();
 
         // Adiciona imagem apenas se foi enviada
         if (imagemBase64) {
@@ -441,6 +471,7 @@ async function salvarComercio() {
 
             // Editar como administrador não transfere a propriedade.
             delete dadosLoja.uid_usuario;
+            if (!profissional && 'profissao' in dadosDoc) dadosLoja.profissao = firebase.firestore.FieldValue.delete();
             await db.collection(NOME_COLECAO).doc(idLojaEmEdicao).update(dadosLoja);
             mostrarSucesso("Dados atualizados com sucesso!");
             resetarModoEdicao();
@@ -450,7 +481,8 @@ async function salvarComercio() {
             mostrarSucesso("Cadastrado com sucesso!");
         }
 
-        // Limpa formulário
+        document.getElementById('filtro-tipo').value = profissional ? 'profissional' : 'negocio';
+        filtrarCards();
         limparFormulario();
 
     } catch (error) {
@@ -459,7 +491,7 @@ async function salvarComercio() {
     } finally {
         // Restaura botão
         btnSubmit.disabled = false;
-        btnSubmit.innerText = idLojaEmEdicao ? "Atualizar Dados" : "Cadastrar Negócio";
+        btnSubmit.innerText = idLojaEmEdicao ? "Atualizar Dados" : "Publicar anúncio";
     }
 }
 
@@ -565,6 +597,10 @@ window.deletarComercio = async function(id) {
  * @param {Object} negocio - Dados do comércio
  */
 function preencherFormulario(negocio) {
+    const profissao = profissaoDoAnuncio(negocio);
+    document.getElementById('reg-tipo').value = profissao ? 'profissional' : 'negocio';
+    document.getElementById('reg-profissao').value = profissao;
+    atualizarCamposAnuncio();
     document.getElementById('reg-rua').value = negocio.rua || '';
     document.getElementById('reg-numero').value = negocio.numero || '';
     document.getElementById('reg-cidade').value = negocio.cidade || '';
@@ -589,6 +625,7 @@ function limparFormulario() {
     const form = document.getElementById('form-cadastro');
     if (form) {
         form.reset();
+        atualizarCamposAnuncio();
     }
 }
 
@@ -599,7 +636,7 @@ function resetarModoEdicao() {
     idLojaEmEdicao = null;
     const btnSubmit = document.querySelector('#form-cadastro button[type="submit"]');
     if (btnSubmit) {
-        btnSubmit.innerText = "Cadastrar Negócio";
+        btnSubmit.innerText = "Publicar anúncio";
     }
 }
 
@@ -614,25 +651,30 @@ function resetarModoEdicao() {
 function criarCampoPesquisa() {
     document.getElementById('input-busca').addEventListener('input',filtrarCards);
     for (const id of ['filtro-cidade','filtro-bairro']) document.getElementById(id).addEventListener('input',filtrarCards);
-    for (const id of ['filtro-categoria','filtro-meus']) document.getElementById(id).addEventListener('change',filtrarCards);
+    for (const id of ['filtro-categoria','filtro-meus','filtro-tipo']) document.getElementById(id).addEventListener('change',filtrarCards);
 }
 window.filtrarComercios = function(termo) {
     const busca = normalizarTexto(termo);
     const estado = document.getElementById('filtro-estado').value;
     const categoria = document.getElementById('filtro-categoria').value;
+    const profissionais = document.getElementById('filtro-tipo').value === 'profissional';
+    const categoriaFiltro = document.getElementById('filtro-categoria');
+    categoriaFiltro.disabled = profissionais;
+    categoriaFiltro.hidden = profissionais;
+    categoriaFiltro.labels[0].hidden = profissionais;
     const meus = document.getElementById('filtro-meus').checked;
     const cidade = normalizarTexto(document.getElementById('filtro-cidade').value);
     const bairro = normalizarTexto(document.getElementById('filtro-bairro').value);
     let encontrados = 0;
     const cards = document.querySelectorAll('.comercio-card');
     cards.forEach(card => {
-        const texto = [card.querySelector('.comercio-nome').textContent,card.querySelector('.comercio-descricao').textContent,card.dataset.categoria].join(' ');
-        const visivel = normalizarTexto(texto).includes(busca) && normalizarTexto(card.dataset.cidade).includes(cidade) && normalizarTexto(card.dataset.bairro).includes(bairro) && (estado === 'Todos' || normalizarTexto(card.dataset.estado) === normalizarTexto(estado)) && (categoria === 'Todos' || normalizarTexto(card.dataset.categoria) === normalizarTexto(categoria)) && (!meus || card.dataset.owner === auth.currentUser?.uid);
+        const texto = [card.querySelector('.comercio-nome').textContent,card.querySelector('.comercio-descricao').textContent,card.dataset.profissao,card.dataset.categoria].join(' ');
+        const visivel = Boolean(card.dataset.profissao) === profissionais && normalizarTexto(texto).includes(busca) && normalizarTexto(card.dataset.cidade).includes(cidade) && normalizarTexto(card.dataset.bairro).includes(bairro) && (estado === 'Todos' || normalizarTexto(card.dataset.estado) === normalizarTexto(estado)) && (profissionais || categoria === 'Todos' || normalizarTexto(card.dataset.categoria) === normalizarTexto(categoria)) && (!meus || card.dataset.owner === auth.currentUser?.uid);
         card.style.display = visivel ? 'flex' : 'none';
         if (visivel) encontrados++;
     });
-    document.getElementById('resultado-filtros').textContent = encontrados + (encontrados === 1 ? ' negócio encontrado' : ' negócios encontrados');
-    document.getElementById('sem-resultados').hidden = encontrados > 0 || cards.length === 0;
+    document.getElementById('resultado-filtros').textContent = encontrados + (encontrados === 1 ? ' anúncio encontrado' : ' anúncios encontrados');
+    document.getElementById('sem-resultados').hidden = encontrados > 0 || !ultimoSnapshot || ultimoSnapshot.empty;
 };
 window.filtrarCards = function() { filtrarComercios(document.getElementById('input-busca').value); };
 window.limparFiltros = function() {
@@ -767,6 +809,8 @@ function removerMensagens() {
 // Submit do formulário de cadastro
 const formCadastro = document.getElementById('form-cadastro');
 if (formCadastro) {
+    document.getElementById('reg-tipo').addEventListener('change', atualizarCamposAnuncio);
+    atualizarCamposAnuncio();
     formCadastro.addEventListener('submit', async function(e) {
         e.preventDefault();
         await salvarComercio();

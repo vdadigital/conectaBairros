@@ -67,6 +67,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
     </header>
 
     <main class="max-w-6xl mx-auto p-4">
+        <nav aria-label="Seções do Conecta Bairros" class="mb-6 flex flex-wrap gap-3">
+            <a href="#balcao" class="rounded-lg bg-white px-4 py-3 font-semibold text-blue-800 shadow-sm">Balcão de serviços</a>
+            <a href="#pesquisa-ia" class="rounded-lg bg-white px-4 py-3 font-semibold text-blue-800 shadow-sm">Pergunte à IA</a>
+        </nav>
         
         <div class="account-bar">
             <div>
@@ -85,43 +89,97 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
             </div>
         </div>
         
+        <section id="pesquisa-ia" aria-labelledby="titulo-pesquisa-ia" class="mb-8 scroll-mt-64 rounded-xl border border-blue-200 bg-white p-5 shadow-sm sm:scroll-mt-36">
+            <h2 id="titulo-pesquisa-ia" class="text-2xl font-bold text-gray-800">Pergunte à IA</h2>
+            <p id="ajuda-pesquisa-ia" class="mb-4 mt-2 text-gray-600">Faça uma pergunta sobre os profissionais de mão de obra cadastrados. Inclua a cidade ou o bairro para refinar a busca. A pergunta e os dados públicos dos anúncios selecionados são enviados ao Gemini.</p>
+            <form id="form-pesquisa-ia">
+                <label for="pergunta-ia" class="block font-semibold text-gray-800">Qual serviço você procura?</label>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <input id="pergunta-ia" type="search" required minlength="3" maxlength="300" aria-describedby="ajuda-pesquisa-ia" placeholder="Onde encontro um eletricista no Centro?" class="min-w-0 basis-64 grow rounded-lg border border-slate-400 px-3 py-2">
+                    <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800">Perguntar</button>
+                </div>
+            </form>
+            <p id="resposta-ia" role="status" aria-live="polite" class="mt-3 whitespace-pre-line break-words text-gray-700"></p>
+            <ul id="resultados-ia" aria-label="Anúncios relacionados" class="mt-2 space-y-2"></ul>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="lg:col-span-2">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Encontre serviços perto de você</h2><p class="mb-4 text-gray-600">Busque por serviço, estado, cidade ou bairro. Para falar com um negócio, use o botão WhatsApp.</p>
-                <div id="filtros" class="filter-panel"><div class="search-field"><label for="input-busca">O que você procura?</label><input id="input-busca" type="search" placeholder="Nome, categoria ou serviço" autocomplete="off"></div>
+            <div id="balcao" class="scroll-mt-64 lg:col-span-2 sm:scroll-mt-36">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Balcão de serviços</h2><p class="mb-4 text-gray-600">Encontre pedreiros, eletricistas, carpinteiros e outros profissionais por profissão, serviço ou local de atendimento. Abra o anúncio para ver os detalhes ou fale com o responsável pelo WhatsApp.</p>
+                <div id="filtros" class="filter-panel">
+    <label for="filtro-tipo">Anúncios</label>
+    <select id="filtro-tipo"><option value="profissional">Profissionais de mão de obra</option><option value="negocio">Negócios locais</option></select><div class="search-field"><label for="input-busca">O que você procura?</label><input id="input-busca" type="search" placeholder="Nome, profissão ou serviço" autocomplete="off"></div>
     <label for="filtro-estado">Estado</label>
     <select id="filtro-estado" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none flex-grow">
         <option value="Todos">Todos os Estados</option>
         <option value="AC">Acre</option>
-        <!-- ... (estados omitidos para manter o seu código) ... -->
+        <option value="AL">Alagoas</option>
+        <option value="AP">Amapá</option>
+        <option value="AM">Amazonas</option>
+        <option value="BA">Bahia</option>
+        <option value="CE">Ceará</option>
+        <option value="DF">Distrito Federal</option>
+        <option value="ES">Espírito Santo</option>
+        <option value="GO">Goiás</option>
+        <option value="MA">Maranhão</option>
+        <option value="MT">Mato Grosso</option>
+        <option value="MS">Mato Grosso do Sul</option>
+        <option value="MG">Minas Gerais</option>
+        <option value="PA">Pará</option>
+        <option value="PB">Paraíba</option>
+        <option value="PR">Paraná</option>
+        <option value="PE">Pernambuco</option>
+        <option value="PI">Piauí</option>
+        <option value="RJ">Rio de Janeiro</option>
+        <option value="RN">Rio Grande do Norte</option>
+        <option value="RS">Rio Grande do Sul</option>
+        <option value="RO">Rondônia</option>
+        <option value="RR">Roraima</option>
         <option value="SC">Santa Catarina</option>
         <option value="SP">São Paulo</option>
         <option value="SE">Sergipe</option>
         <option value="TO">Tocantins</option>
     </select>
-    <label for="filtro-cidade">Cidade</label><input id="filtro-cidade" type="search" placeholder="Todas as cidades"><label for="filtro-bairro">Bairro</label><input id="filtro-bairro" type="search" placeholder="Todos os bairros"><label for="filtro-categoria">Categoria</label><select id="filtro-categoria"><option value="Todos">Todas as categorias</option><option value="Alimentação">Alimentação</option><option value="Serviços">Serviços</option><option value="Varejo">Varejo</option><option value="Saúde">Saúde e Beleza</option><option value="Tecnologia">Tecnologia</option><option value="Comunicação">Jornalismo</option><option value="Outros">Outros</option></select><label class="my-business"><input type="checkbox" id="filtro-meus" disabled> Somente meus negócios</label><button type="button" onclick="limparFiltros()">Limpar filtros</button><button type="button" onclick="filtrarCards()" class="bg-gray-800 text-white font-bold py-2 px-6 rounded hover:bg-gray-900 transition">
+    <label for="filtro-cidade">Cidade</label><input id="filtro-cidade" type="search" placeholder="Todas as cidades"><label for="filtro-bairro">Bairro</label><input id="filtro-bairro" type="search" placeholder="Todos os bairros"><label for="filtro-categoria">Categoria</label><select id="filtro-categoria"><option value="Todos">Todas as categorias</option><option value="Alimentação">Alimentação</option><option value="Serviços">Serviços</option><option value="Varejo">Varejo</option><option value="Saúde">Saúde e Beleza</option><option value="Tecnologia">Tecnologia</option><option value="Comunicação">Jornalismo</option><option value="Outros">Outros</option></select><label class="my-business"><input type="checkbox" id="filtro-meus" disabled> Somente meus anúncios</label><button type="button" onclick="limparFiltros()">Limpar filtros</button><button type="button" onclick="filtrarCards()" class="bg-gray-800 text-white font-bold py-2 px-6 rounded hover:bg-gray-900 transition">
         🔍 Filtrar
     </button>
 </div>
-                <p id="resultado-filtros" role="status" aria-live="polite"></p><p id="sem-resultados" hidden>Nenhum negócio encontrado. Tente outro termo ou limpe os filtros.</p><div id="container-comercios" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <p id="resultado-filtros" role="status" aria-live="polite"></p><p id="sem-resultados" hidden>Nenhum anúncio encontrado. Tente outro termo ou limpe os filtros.</p><div id="container-comercios" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-full flex justify-center py-10">
                         <p class="text-gray-500 animate-pulse">Procurando comércios cadastrados...</p>
                     </div>
                 </div>
             </div>
 <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-200 h-fit">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Cadastrar Negócio</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Publicar anúncio</h2>
                 
-                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro"><p class="form-help">O endereço informado será público na página do negócio. Informe o local de atendimento.</p><div class="mb-3"><label for="reg-rua" class="block text-sm font-semibold text-gray-700">Rua / avenida (opcional)</label><input id="reg-rua" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-line1"></div><div class="mb-3"><label for="reg-numero" class="block text-sm font-semibold text-gray-700">Número (opcional)</label><input id="reg-numero" maxlength="20" placeholder="Ex: 1904 ou s/n" class="mt-1 w-full p-2 border rounded"></div><div class="mb-3"><label for="reg-cidade" class="block text-sm font-semibold text-gray-700">Cidade (opcional)</label><input id="reg-cidade" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-level2"></div><div class="mb-3"><label for="reg-bairro" class="block text-sm font-semibold text-gray-700">Bairro (opcional)</label><input id="reg-bairro" maxlength="100" class="mt-1 w-full p-2 border rounded"></div>
+                <p id="cadastro-ajuda" class="form-help">Entre com sua conta Google para publicar. Você pode preparar os dados abaixo.</p><form id="form-cadastro">
                     <div class="mb-3">
-                        <label for="reg-nome" class="block text-sm font-semibold text-gray-700">Nome do Negócio</label>
+                        <label for="reg-tipo" class="block text-sm font-semibold text-gray-700">Tipo de anúncio</label>
+                        <select id="reg-tipo" class="mt-1 w-full rounded border p-2">
+                            <option value="profissional">Profissional de mão de obra</option>
+                            <option value="negocio">Negócio local</option>
+                        </select>
+                    </div>
+                    <div id="campo-profissao" class="mb-3">
+                        <label for="reg-profissao" class="block text-sm font-semibold text-gray-700">Profissão</label>
+                        <input id="reg-profissao" required maxlength="80" list="profissoes" placeholder="Ex: Eletricista" class="mt-1 w-full rounded border p-2">
+                        <datalist id="profissoes">
+                            <option value="Pedreiro"><option value="Eletricista"><option value="Carpinteiro"><option value="Encanador">
+                            <option value="Pintor"><option value="Marceneiro"><option value="Serralheiro"><option value="Gesseiro">
+                            <option value="Jardineiro"><option value="Vidraceiro"><option value="Azulejista"><option value="Técnico de refrigeração">
+                        </datalist>
+                    </div>
+                    <p id="ajuda-endereco" class="form-help">Informe a cidade e, se quiser, o bairro onde você atende. Esses dados e o WhatsApp serão públicos.</p><div id="campo-rua" class="mb-3" hidden><label for="reg-rua" class="block text-sm font-semibold text-gray-700">Rua / avenida (opcional)</label><input id="reg-rua" maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-line1"></div><div id="campo-numero" class="mb-3" hidden><label for="reg-numero" class="block text-sm font-semibold text-gray-700">Número (opcional)</label><input id="reg-numero" maxlength="20" placeholder="Ex: 1904 ou s/n" class="mt-1 w-full p-2 border rounded"></div><div class="mb-3"><label for="reg-cidade" class="block text-sm font-semibold text-gray-700">Cidade de atendimento</label><input id="reg-cidade" required maxlength="100" class="mt-1 w-full p-2 border rounded" autocomplete="address-level2"></div><div class="mb-3"><label for="reg-bairro" class="block text-sm font-semibold text-gray-700">Bairro (opcional)</label><input id="reg-bairro" maxlength="100" class="mt-1 w-full p-2 border rounded"></div>
+                    <div class="mb-3">
+                        <label for="reg-nome" class="block text-sm font-semibold text-gray-700">Nome público do profissional ou negócio</label>
                         <input type="text" maxlength="150" id="reg-nome" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     
-                    <div class="mb-3">
+                    <div id="campo-categoria" class="mb-3" hidden>
                         <label for="reg-categoria" class="block text-sm font-semibold text-gray-700">Categoria</label>
-                        <select id="reg-categoria" required class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <select id="reg-categoria" disabled class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="">Selecione...</option>
                             <option value="Alimentação">Alimentação</option>
                             <option value="Serviços">Serviços</option>
@@ -144,8 +202,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
                     </div>
                     
                     <div class="mb-3">
-                        <label for="reg-descricao" class="block text-sm font-semibold text-gray-700">Descrição</label>
-                        <textarea maxlength="5000" id="reg-descricao" required rows="3" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                        <label for="reg-descricao" class="block text-sm font-semibold text-gray-700">Serviços oferecidos ou descrição do negócio</label>
+                        <textarea maxlength="5000" id="reg-descricao" placeholder="Ex: Instalação de tomadas, troca de disjuntores e manutenção elétrica" required rows="3" class="mt-1 w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                     </div>
 
                     <div class="mb-5">
@@ -153,13 +211,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
                         <input type="file" id="imagem-loja" accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500">
                         <p class="text-xs text-gray-500 mt-2">JPG, PNG ou WEBP, até 2 MB.</p>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Cadastrar Negócio</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Publicar anúncio</button>
                     <button type="button" onclick="resetarModoEdicao();limparFormulario()" class="w-full mt-3 py-2 border rounded-lg">Cancelar edição / limpar</button>
                 </form>
             </div>
         </div>
     </main>
     <footer class="text-center p-6 text-gray-600">Conecta Bairros · Conectando empreendedores e a comunidade</footer>
-    <script src="assets/js/conectabairros-admin-v1.js?v=1"></script>
+    <script src="assets/js/conectabairros-admin-v1.js?v=2"></script>
+    <script src="assets/js/pesquisa-ia.js?v=2" defer></script>
 </body>
 </html>
