@@ -211,7 +211,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
                         <input type="file" id="imagem-loja" accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500">
                         <p class="text-xs text-gray-500 mt-2">JPG, PNG ou WEBP, até 2 MB.</p>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Publicar anúncio</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Executar anúncio</button>
                     <button type="button" onclick="resetarModoEdicao();limparFormulario()" class="w-full mt-3 py-2 border rounded-lg">Cancelar edição / limpar</button>
                 </form>
             </div>
